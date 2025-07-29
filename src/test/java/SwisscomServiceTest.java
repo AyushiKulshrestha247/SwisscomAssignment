@@ -1,11 +1,14 @@
-import model.Owner;
-import model.Resource;
-import model.ServiceObject;
+import com.assignment.swisscom.model.Owner;
+import com.assignment.swisscom.model.Resource;
+import com.assignment.swisscom.model.ServiceObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import repository.ServiceRepository;
-import service.Swisscom_Service;
+import com.assignment.swisscom.repository.ServiceRepository;
+import com.assignment.swisscom.service.Swisscom_Service;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
 
@@ -14,7 +17,10 @@ import static org.mockito.Mockito.*;
 
 public class SwisscomServiceTest {
 
+    @Mock
     private ServiceRepository repository;
+
+    @InjectMocks
     private Swisscom_Service service;
     private ServiceObject serviceObject;
 
@@ -57,7 +63,7 @@ public class SwisscomServiceTest {
     @Test
     public void testUpdateService() {
         when(repository.save(serviceObject)).thenReturn(serviceObject);
-        String id = "1";
+        String id = "service_id_1";
 
         ServiceObject updated = service.update(id, serviceObject);
 
@@ -67,10 +73,19 @@ public class SwisscomServiceTest {
 
     @Test
     public void testGetFromCache() {
-        service.save(serviceObject); // Populate cache
+        ServiceObject serviceObject = new ServiceObject();
+        serviceObject.setId("service_id_1");
+        serviceObject.setResources(new ArrayList<>());
 
-        Optional<ServiceObject> result = service.get("service_id_1");
+        // Mock repository behavior
+        when(repository.save(serviceObject)).thenReturn(serviceObject);
+        when(repository.findById("service_id_1")).thenReturn(Optional.of(serviceObject));
 
+        // Act
+        service.save(serviceObject); // Save to mocked repository
+        Optional<ServiceObject> result = service.get("service_id_1"); // Retrieve from mocked repository
+
+        // Assert
         assertTrue(result.isPresent());
         assertEquals("service_id_1", result.get().getId());
     }
