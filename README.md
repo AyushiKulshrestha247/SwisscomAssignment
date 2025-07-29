@@ -56,3 +56,10 @@ $ mvn spring-boot:run -Dspring-boot.run.profiles=prod
 
 $ mvn test
 
+## Bash script
+
+**For Linux/macOS:**
+chmod +x run-app.sh
+
+./run-app.sh dev
+
