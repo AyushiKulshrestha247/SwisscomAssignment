@@ -1,4 +1,4 @@
-package model;
+package com.assignment.swisscom.model;
 
 import lombok.Data;
 

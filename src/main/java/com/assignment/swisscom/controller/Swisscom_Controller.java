@@ -1,9 +1,10 @@
-package controller;
+package com.assignment.swisscom.controller;
 
-import model.ServiceObject;
+import com.assignment.swisscom.model.ServiceObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import service.Swisscom_Service;
+import com.assignment.swisscom.service.Swisscom_Service;
 
 @RestController
 @RequestMapping("/api/service")
@@ -21,7 +22,7 @@ public class Swisscom_Controller {
         return ResponseEntity.ok(cache.save(service));
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     public ResponseEntity<ServiceObject> update(@PathVariable String id, @RequestBody ServiceObject service) {
         return ResponseEntity.ok(cache.update(id, service));
     }
