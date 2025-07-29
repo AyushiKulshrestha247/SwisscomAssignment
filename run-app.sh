@@ -7,7 +7,7 @@ LOG_FILE="app.log"
 echo "🔧 Using profile: $PROFILE"
 
 if [ ! -f "$JAR_NAME" ]; then
-  echo "❌ JAR file not found. Please build the project first using 'mvn clean install'."
+  echo "❌ JAR file not found. Please build the project first using 'mvn clean install'.."
   exit 1
 fi
 
