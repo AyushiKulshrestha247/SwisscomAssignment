@@ -1,4 +1,4 @@
-A web-based application for managing services, built using Spring Boot and MongoDB for the backend, and HTML/JavaScript for the frontend.
+A web-based application for managing services, built using Spring Boot and MongoDB for the backend, and HTML/CSS/JavaScript & Material Components for the frontend.
 
 ---
 
@@ -47,7 +47,6 @@ $ mvn clean install
 
 application-dev.yml → connects to local devdb
 
-application-prod.yml → connects to local proddb
 
 Activate profile as below
 
