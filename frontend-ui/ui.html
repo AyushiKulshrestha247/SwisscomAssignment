@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Swisscom Assignment</title>
+
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet" />
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #f2f4f8, #e8ecf1);
+      padding: 2rem;
+      color: #333;
+    }
+
+    form {
+      background-color: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      max-width: 850px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #0078d4;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0 0.25rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 16px;
+    }
+
+    .error {
+      color: red;
+      font-size: 0.85em;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    textarea {
+      resize: vertical;
+      margin-bottom: 1rem;
+    }
+
+    button {
+      padding: 0.6rem 1.2rem;
+      margin: 0.3rem 0.5rem 0.8rem 0;
+      background-color: #0078d4;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      font-size: 14px;
+      gap: 6px;
+    }
+
+    button:hover {
+      background-color: #005ea1;
+    }
+
+    fieldset {
+      border: 1px solid #ccc;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      border-radius: 6px;
+    }
+
+    legend {
+      font-weight: bold;
+      color: #444;
+    }
+
+    .material-icons-outlined {
+      font-size: 18px;
+      vertical-align: middle;
+    }
+
+    .ownerContainer {
+      margin-top: 1rem;
+    }
+
+    .resourceContent {
+      margin-top: 1rem;
+    }
+
+    pre {
+      background-color: #eef;
+      padding: 1rem;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Swisscom Assignment</h1>
+
+<form id="serviceForm">
+  <input type="text" id="serviceId" placeholder="Service ID" />
+  <span class="error" id="serviceIdError"></span>
+
+  <div id="resourceContainer">
+    <h3>Resources</h3>
+    <button type="button" onclick="addResource()">
+      <span class="material-icons-outlined">add_circle</span> Add Resource
+    </button>
+  </div>
+
+  <button type="button" onclick="serializeService()">
+    <span class="material-icons-outlined">code</span> Serialize to JSON
+  </button>
+
+  <textarea id="serviceData" placeholder="JSON data for service" rows="8"></textarea>
+
+  <button type="button" onclick="createService()">
+    <span class="material-icons-outlined">add_box</span> Create
+  </button>
+  <button type="button" onclick="updateService()">
+    <span class="material-icons-outlined">edit</span> Update
+  </button>
+  <button type="button" onclick="deleteService()">
+    <span class="material-icons-outlined">delete_forever</span> Delete
+  </button>
+  <button type="button" onclick="getService()">
+    <span class="material-icons-outlined">search</span> Get
+  </button>
+</form>
+
+<h3>Response:</h3>
+<pre id="output"></pre>
+
+<script>
+  const apiBase = 'http://localhost:8080/api/service';
+  let resourceCount = 0;
+
+  function displayOutput(data) {
+    document.getElementById('output').textContent = JSON.stringify(data, null, 2);
+  }
+
+  function clearErrors() {
+    document.querySelectorAll('.error').forEach(e => e.textContent = '');
+  }
+
+  function addResource() {
+    const container = document.getElementById('resourceContainer');
+    const div = document.createElement('div');
+    div.innerHTML = `
+      <fieldset id="resource${resourceCount}">
+        <legend>Resource ${resourceCount + 1}</legend>
+        <div class="resourceContent">
+          <input type="text" placeholder="Resource ID" class="resourceId" />
+          <span class="error"></span>
+          <div class="ownerContainer">
+            <h4>Owners</h4>
+            <button type="button" onclick="addOwner(this)">
+              <span class="material-icons-outlined">person_add</span> Add Owner
+            </button>
+          </div>
+        </div>
+      </fieldset>
+    `;
+    container.appendChild(div);
+    resourceCount++;
+  }
+
+  function addOwner(button) {
+    const ownerContainer = button.parentElement;
+    const inputGroup = document.createElement('div');
+    inputGroup.innerHTML = `
+      <input type="text" placeholder="Owner ID" class="ownerId" />
+      <span class="error"></span>
+      <input type="text" placeholder="Owner Name" class="ownerName" />
+      <span class="error"></span>
+      <input type="text" placeholder="Account Number" class="accountNumber" />
+      <span class="error"></span>
+      <input type="number" placeholder="Level" class="level" />
+      <span class="error"></span>
+    `;
+    ownerContainer.appendChild(inputGroup);
+  }
+
+  function validateForm() {
+    clearErrors();
+    let valid = true;
+
+    const serviceId = document.getElementById('serviceId').value.trim();
+    if (!serviceId) {
+      document.getElementById('serviceIdError').textContent = 'Service ID is required.';
+      valid = false;
+    }
+
+    const resourceEls = document.querySelectorAll('#resourceContainer fieldset');
+    resourceEls.forEach((resEl, resIdx) => {
+      const resId = resEl.querySelector('.resourceId').value.trim();
+      const resError = resEl.querySelector('.resourceId + .error');
+      if (!resId) {
+        resError.textContent = 'Resource ID is required.';
+        valid = false;
+      }
+
+      const ownerGroups = resEl.querySelectorAll('.ownerContainer > div');
+      ownerGroups.forEach(ownerEl => {
+        const fields = ['ownerId', 'ownerName', 'accountNumber', 'level'];
+        fields.forEach(cls => {
+          const input = ownerEl.querySelector(`.${cls}`);
+          const err = input.nextElementSibling;
+          const value = input.value.trim();
+          if (!value && cls !== 'level') {
+            err.textContent = `${cls.replace('owner', '')} is required.`;
+            valid = false;
+          }
+          if (cls === 'level') {
+            if (value === '' || isNaN(value) || Number(value) < 0) {
+              err.textContent = 'Level must be a non-negative number.';
+              valid = false;
+            }
+          }
+        });
+      });
+    });
+
+    return valid;
+  }
+
+  function serializeService() {
+    if (!validateForm()) return;
+    const serviceId = document.getElementById('serviceId').value;
+    const resourceEls = document.querySelectorAll('#resourceContainer fieldset');
+    const resources = Array.from(resourceEls).map(resEl => {
+      const resId = resEl.querySelector('.resourceId').value;
+      const owners = Array.from(resEl.querySelectorAll('.ownerContainer > div')).map(ownerEl => ({
+        id: ownerEl.querySelector('.ownerId').value,
+        name: ownerEl.querySelector('.ownerName').value,
+        accountNumber: ownerEl.querySelector('.accountNumber').value,
+        level: parseInt(ownerEl.querySelector('.level').value, 10)
+      }));
+      return { id: resId, owners };
+    });
+    const json = { id: serviceId, resources };
+    document.getElementById('serviceData').value = JSON.stringify(json, null, 2);
+  }
+
+  async function createService() {
+    if (!validateForm()) return;
+    const data = JSON.parse(document.getElementById('serviceData').value);
+    const response = await fetch(apiBase, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const result = await response.json();
+    displayOutput(result);
+  }
+
+      async function updateService() {
+      if (!validateForm()) return;
+      const serviceId = document.getElementById('serviceId').value;
+      const data = JSON.parse(document.getElementById('serviceData').value);
+      const response = await fetch(`${apiBase}/${serviceId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      const result = await response.json();
+      displayOutput(result);
+    }
+
+    async function deleteService() {
+      const serviceId = document.getElementById('serviceId').value.trim();
+      if (!serviceId) {
+        document.getElementById('serviceIdError').textContent = 'Service ID is required to delete.';
+        return;
+      }
+      const response = await fetch(`${apiBase}/${serviceId}`, {
+        method: 'DELETE'
+      });
+      const message = response.ok ? 'Service deleted successfully.' : 'Service not found or could not be deleted.';
+      displayOutput({ status: response.status, message });
+    }
+
+    async function getService() {
+      const serviceId = document.getElementById('serviceId').value.trim();
+      if (!serviceId) {
+        document.getElementById('serviceIdError').textContent = 'Service ID is required to fetch.';
+        return;
+      }
+      const response = await fetch(`${apiBase}/${serviceId}`);
+      if (!response.ok) {
+        displayOutput({ status: response.status, message: 'Service not found.' });
+        return;
+      }
+      const result = await response.json();
+      displayOutput(result);
+    }
+  </script>
+</body>
+</html>
+
